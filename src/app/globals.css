@@ -24,6 +24,8 @@ body {
 
 .gradient-border {
   position: relative;
+  --gradient-border-from: rgb(16 16 16 / 0.1);
+  --gradient-border-to: rgb(16 16 16 / 0);
 }
 
 .gradient-border::before {
@@ -32,7 +34,7 @@ body {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(to bottom, rgb(16 16 16 / 0.1), rgb(16 16 16 / 0));
+  background: linear-gradient(to bottom, var(--gradient-border-from), var(--gradient-border-to));
   pointer-events: none;
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
@@ -42,6 +44,11 @@ body {
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
   mask-composite: exclude;
+}
+
+.gradient-border-card {
+  --gradient-border-from: rgb(28 28 28 / 0);
+  --gradient-border-to: rgb(28 28 28 / 0.2);
 }
 
 /* Inset ring: sits inside the fill so semi-transparent stroke darkens the gradient edge */
