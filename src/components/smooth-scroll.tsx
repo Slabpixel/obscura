@@ -1,5 +1,6 @@
 "use client";
 
+import LenisScrollTriggerBridge from "@/components/lenis-scroll-trigger-bridge";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ReactLenis, type LenisRef } from "lenis/react";
@@ -34,7 +35,8 @@ export default function SmoothScroll({ children }: SmoothScrollProps) {
   }, []);
 
   return (
-    <ReactLenis root options={{ autoRaf: false }} ref={lenisRef}>
+    <ReactLenis root options={{ autoRaf: false, anchors: true }} ref={lenisRef}>
+      <LenisScrollTriggerBridge />
       {children}
     </ReactLenis>
   );

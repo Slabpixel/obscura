@@ -5,7 +5,7 @@ export default function Features() {
         <section id="features" className="relative overflow-hidden py-28">
             <div className="mx-auto max-w-8xl lg:px-10 md:px-8 sm:px-6 px-4">
                 <div className="flex flex-col items-center justify-center gap-15">
-                    <h2 className="text-[3.5rem] font-bold text-center leading-[1.1] max-w-175">Everything You Need in One Platform</h2>
+                    <h2 className="text-[3.5rem] tracking-[-0.02em] font-bold text-center leading-[1.1] max-w-175">Everything You Need in One Platform</h2>
                     <div className="grid grid-cols-8 gap-5 h-240 max-w-252.5 w-full">
                         <div className="gradient-border gradient-border-card relative p-7.5 col-span-5 flex items-end rounded-[1.25rem]">
                             <Image src="/emotional.png" alt="Emotional" fill className="object-contain w-full" />
