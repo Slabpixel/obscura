@@ -3,7 +3,7 @@ import Image from "next/image";
 export default function Hero() {
     return (
         <section id="features" className="h-dvh min-h-160 sm:min-h-180 relative text-background overflow-hidden pb-16 pt-32 md:pt-36 lg:pt-40 scroll-mt-28">
-            <Image src="/hero-bg.png" alt="Hero BG" fill className="object-cover" />
+            <Image src="/hero-bg.png" alt="Hero BG" fill className="object-cover object-bottom" />
             <div className="relative mx-auto h-full max-w-8xl lg:px-10 md:px-8 sm:px-6 px-4">
                 <div className="relative h-full w-full flex flex-col items-center justify-start gap-10 sm:gap-14 lg:gap-17.5">
                     <div className="relative flex flex-col items-center justify-center text-center">
@@ -28,7 +28,7 @@ export default function Hero() {
                     </div>
                 </div>
             </div>
-            <Image src="/person.png" alt="Person" width={500} height={1000} className="w-1/4 min-w-132 max-md:hidden absolute z-1 bottom-[4%] left-[49.5%] -translate-x-1/2 pointer-events-none" />
+            {/* <Image src="/person.png" alt="Person" width={500} height={1000} className="w-1/4 max-xl:hidden absolute z-1 bottom-[8%] left-[49.5%] -translate-x-1/2 pointer-events-none" /> */}
         </section>
     );
 }

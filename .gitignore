@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+compress.sh
 
 # next.js
 /.next/
