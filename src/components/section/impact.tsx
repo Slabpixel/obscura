@@ -94,7 +94,7 @@ export default function Impact() {
 
             ScrollTrigger.create({
                 trigger: pin,
-                start: "top 15%",
+                start: "top top",
                 end: () => `+=${pinLength()}`,
                 pin: true,
                 anticipatePin: 1,
@@ -141,50 +141,50 @@ export default function Impact() {
 
             if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
                 hoverCleanups = cards.map((card, index) => {
-                const visualEl = cardVisualRefs.current[index];
-                if (!visualEl) return () => {};
+                    const visualEl = cardVisualRefs.current[index];
+                    if (!visualEl) return () => {};
 
-                gsap.set(card, { transformPerspective: 900 });
+                    gsap.set(card, { transformPerspective: 900 });
 
-                const xTo = gsap.quickTo(visualEl, "x", { duration: 0.55, ease: "power3.out" });
-                const yTo = gsap.quickTo(visualEl, "y", { duration: 0.55, ease: "power3.out" });
+                    const xTo = gsap.quickTo(visualEl, "x", { duration: 0.55, ease: "power3.out" });
+                    const yTo = gsap.quickTo(visualEl, "y", { duration: 0.55, ease: "power3.out" });
 
-                const image = visualEl.querySelector("img");
+                    const image = visualEl.querySelector("img");
 
-                const imgXTo = image
-                    ? gsap.quickTo(image, "x", { duration: 0.65, ease: "power3.out" })
-                    : null;
-                const imgYTo = image
-                    ? gsap.quickTo(image, "y", { duration: 0.65, ease: "power3.out" })
-                    : null;
+                    const imgXTo = image
+                        ? gsap.quickTo(image, "x", { duration: 0.65, ease: "power3.out" })
+                        : null;
+                    const imgYTo = image
+                        ? gsap.quickTo(image, "y", { duration: 0.65, ease: "power3.out" })
+                        : null;
 
-                const onMove = (event: MouseEvent) => {
-                    const rect = card.getBoundingClientRect();
-                    const relX = (event.clientX - rect.left) / rect.width - 0.5;
-                    const relY = (event.clientY - rect.top) / rect.height - 0.5;
+                    const onMove = (event: MouseEvent) => {
+                        const rect = card.getBoundingClientRect();
+                        const relX = (event.clientX - rect.left) / rect.width - 0.5;
+                        const relY = (event.clientY - rect.top) / rect.height - 0.5;
 
-                    xTo(relX * rect.width * 0.1);
-                    yTo(relY * rect.height * 0.1);
+                        xTo(relX * rect.width * 0.1);
+                        yTo(relY * rect.height * 0.1);
 
-                    imgXTo?.(relX * rect.width * 0.01);
-                    imgYTo?.(relY * rect.height * 0.01);
-                };
+                        imgXTo?.(relX * rect.width * 0.01);
+                        imgYTo?.(relY * rect.height * 0.01);
+                    };
 
-                const onLeave = () => {
-                    xTo(0);
-                    yTo(0);
-                    imgXTo?.(0);
-                    imgYTo?.(0);
-                };
+                    const onLeave = () => {
+                        xTo(0);
+                        yTo(0);
+                        imgXTo?.(0);
+                        imgYTo?.(0);
+                    };
 
-                card.addEventListener("mousemove", onMove);
-                card.addEventListener("mouseleave", onLeave);
+                    card.addEventListener("mousemove", onMove);
+                    card.addEventListener("mouseleave", onLeave);
 
-                return () => {
-                    card.removeEventListener("mousemove", onMove);
-                    card.removeEventListener("mouseleave", onLeave);
-                };
-            });
+                    return () => {
+                        card.removeEventListener("mousemove", onMove);
+                        card.removeEventListener("mouseleave", onLeave);
+                    };
+                });
             }
         }, section);
 
@@ -201,68 +201,64 @@ export default function Impact() {
 
     return (
         <section id="how-it-works" ref={sectionRef} className="relative">
-            <div className="mx-auto max-w-8xl px-4 py-15 sm:px-6 md:px-8 lg:px-10">
-                <h2 className="text-center text-[3.5rem] font-bold leading-[1.1] tracking-[-0.02em]">
+            <div className="mx-auto max-w-8xl px-4 py-10 lg:py-15 sm:px-6 md:px-8 lg:px-10">
+                <h2 className="text-center text-4xl sm:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] tracking-[-0.02em]">
                     Proven success. Major impact.
                 </h2>
             </div>
 
-            <div ref={pinRef} className="w-full px-4 pb-15 sm:px-6 md:px-8 lg:px-10">
-                <div className="relative mx-auto min-h-144 w-full max-w-[71.5rem]">
-                    <div className="relative min-h-144 w-full">
-                        {CARDS.map((card, index) => {
-                            const layout = INITIAL_LAYOUT[index];
-
-                            return (
+            <div ref={pinRef} className="flex h-svh w-full flex-col justify-center px-4 sm:px-6 md:px-8 lg:px-10">
+                <div className="relative mx-auto min-h-64 sm:min-h-96 lg:min-h-144 w-full max-w-286">
+                    <div className="relative min-h-64 sm:min-h-96 lg:min-h-144 w-full">
+                        {CARDS.map((card, index) => (
+                            <div
+                                key={card.label}
+                                ref={(el) => {
+                                    cardRefs.current[index] = el;
+                                }}
+                                className="absolute top-0 cursor-pointer"
+                                style={{
+                                    left: INITIAL_LAYOUT[index].left,
+                                    width: CARD_WIDTH,
+                                    zIndex: index + 1,
+                                }}
+                            >
                                 <div
-                                    key={card.label}
                                     ref={(el) => {
-                                        cardRefs.current[index] = el;
+                                        cardVisualRefs.current[index] = el;
                                     }}
-                                    className="absolute top-0 cursor-pointer"
-                                    style={{
-                                        left: layout.left,
-                                        width: CARD_WIDTH,
-                                        zIndex: index + 1,
-                                    }}
+                                    className="relative w-full overflow-hidden rounded-2xl will-change-transform transform-3d"
+                                    style={{ aspectRatio: "294 / 448" }}
                                 >
-                                    <div
-                                        ref={(el) => {
-                                            cardVisualRefs.current[index] = el;
-                                        }}
-                                        className="relative w-full overflow-hidden rounded-2xl will-change-transform [transform-style:preserve-3d]"
-                                        style={{ aspectRatio: "294 / 448" }}
-                                    >
-                                        <Image
-                                            src={card.image}
-                                            alt=""
-                                            fill
-                                            sizes="(max-width: 768px) 45vw, 294px"
-                                            className="object-cover object-left"
-                                            priority={index === 0}
-                                        />
-                                    </div>
-
-                                    <div
-                                        ref={(el) => {
-                                            labelRefs.current[index] = el;
-                                        }}
-                                        className="mt-4 flex items-end gap-3 opacity-0"
-                                    >
-                                        <Image
-                                            src="/impact/label-line.svg"
-                                            alt=""
-                                            width={1}
-                                            height={80}
-                                            className="h-20 w-px shrink-0"
-                                        />
-                                        <span className="font-mono text-sm font-medium uppercase tracking-wider">
-                                            {card.label}
-                                        </span>
-                                    </div>
+                                    <Image
+                                        src={card.image}
+                                        alt=""
+                                        fill
+                                        sizes="(max-width: 768px) 45vw, 294px"
+                                        className="object-cover object-left"
+                                        priority={index === 0}
+                                    />
                                 </div>
-                            );
-                        })}
+
+                                <div
+                                    ref={(el) => {
+                                        labelRefs.current[index] = el;
+                                    }}
+                                    className="mt-4 flex items-end gap-3 opacity-0"
+                                >
+                                    <Image
+                                        src="/impact/label-line.svg"
+                                        alt=""
+                                        width={1}
+                                        height={80}
+                                        className="h-14 w-px shrink-0 lg:h-20"
+                                    />
+                                    <span className="font-mono text-sm font-medium uppercase tracking-wider">
+                                        {card.label}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
