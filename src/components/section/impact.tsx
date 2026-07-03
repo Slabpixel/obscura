@@ -4,6 +4,8 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import { useLayoutEffect, useRef } from "react";
+import RevealText from "@/components/reveal-text";
+import ScrambleText from "@/components/scramble-text";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -202,9 +204,9 @@ export default function Impact() {
     return (
         <section id="how-it-works" ref={sectionRef} className="relative">
             <div className="mx-auto max-w-8xl px-4 py-10 lg:py-15 sm:px-6 md:px-8 lg:px-10">
-                <h2 className="text-center text-4xl sm:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] tracking-[-0.02em]">
+                <RevealText as="h2" className="text-center text-4xl sm:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] tracking-[-0.02em]">
                     Proven success. Major impact.
-                </h2>
+                </RevealText>
             </div>
 
             <div ref={pinRef} className="flex h-svh w-full flex-col justify-center px-4 sm:px-6 md:px-8 lg:px-10">
@@ -253,8 +255,8 @@ export default function Impact() {
                                         height={80}
                                         className="h-14 w-px shrink-0 lg:h-20"
                                     />
-                                    <span className="font-mono text-sm font-medium uppercase tracking-wider">
-                                        {card.label}
+                                    <span className="font-mono md:text-sm sm:text-xs text-[0.625rem] font-medium uppercase tracking-wider">
+                                        <ScrambleText>{card.label}</ScrambleText>
                                     </span>
                                 </div>
                             </div>

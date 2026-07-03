@@ -93,7 +93,7 @@ export function InsightsPillGrid() {
     const containerRef = useRef<HTMLDivElement>(null);
 
     return (
-        <div ref={containerRef} className="flex flex-wrap gap-3">
+        <div ref={containerRef} data-pills className="flex flex-wrap gap-3">
             {PILLS.map((pill) => (
                 <GlassPill
                     key={pill.label}

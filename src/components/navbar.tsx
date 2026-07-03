@@ -4,6 +4,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import ScrambleText from "@/components/scramble-text";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -17,10 +18,57 @@ const NAV_LINKS = [
 export default function Navbar() {
     const [activeSection, setActiveSection] = useState("features");
     const [menuOpen, setMenuOpen] = useState(false);
+    const rootRef = useRef<HTMLElement>(null);
     const navRef = useRef<HTMLDivElement>(null);
     const indicatorRef = useRef<HTMLDivElement>(null);
     const linkRefs = useRef<Partial<Record<string, HTMLAnchorElement | null>>>({});
     const hasAnimated = useRef(false);
+
+    useLayoutEffect(() => {
+        const root = rootRef.current;
+        if (!root) return;
+
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reducedMotion) return;
+
+        const items = root.querySelectorAll<HTMLElement>("[data-nav-reveal]");
+        const navWrapper = navRef.current;
+
+        const ctx = gsap.context(() => {
+            const tl = gsap.timeline({
+                defaults: { ease: "power3.out" },
+                // Reposition the active indicator once transforms settle so it
+                // doesn't get stuck at a mid-animation position.
+                onComplete: () => window.dispatchEvent(new Event("resize")),
+            });
+
+            tl.from(root, { y: -24, autoAlpha: 0, duration: 0.6 });
+
+            if (navWrapper) {
+                tl.from(
+                    navWrapper,
+                    { clipPath: "inset(0 0 100% 0)", duration: 0.7, clearProps: "clipPath" },
+                    "-=0.2",
+                );
+            }
+
+            if (items.length > 0) {
+                tl.from(
+                    items,
+                    {
+                        y: -16,
+                        autoAlpha: 0,
+                        filter: "blur(6px)",
+                        duration: 0.5,
+                        stagger: 0.08,
+                    },
+                    "-=0.4",
+                );
+            }
+        }, rootRef);
+
+        return () => ctx.revert();
+    }, []);
 
     useEffect(() => {
         const triggers = NAV_LINKS.flatMap(({ href }) => {
@@ -110,11 +158,11 @@ export default function Navbar() {
     const closeMenu = () => setMenuOpen(false);
 
     return (
-        <nav className="fixed font-mono text-background whitespace-nowrap font-medium uppercase tracking-wider lg:px-10 md:px-8 sm:px-6 px-4 top-3 sm:top-5 w-full mx-auto z-100">
+        <nav ref={rootRef} className="fixed font-mono text-background whitespace-nowrap font-medium uppercase tracking-wider lg:px-10 md:px-8 sm:px-6 px-4 top-3 sm:top-5 w-full mx-auto z-100">
             <div className="gradient-border mx-auto max-w-8xl bg-background/10 w-full backdrop-blur-xl rounded-[1.25rem] flex flex-col">
                 <div className="flex items-center h-16 lg:h-20 p-3">
                     <div className="flex flex-1 items-center">
-                        <a href="/" className="h-full place-content-center w-fit">
+                        <a href="/" data-nav-reveal className="h-full place-content-center w-fit">
                             <Image src="/logo.svg" alt="Logo" width={144} height={48} className="w-28 lg:w-36 h-auto" />
                         </a>
                     </div>
@@ -140,20 +188,26 @@ export default function Navbar() {
                                     aria-current={activeSection === id ? "page" : undefined}
                                     className="nav-link"
                                 >
-                                    {label}
+                                    <ScrambleText trigger="parent">{label}</ScrambleText>
                                 </a>
                             );
                         })}
                     </div>
 
                     <div className="hidden lg:flex flex-1 items-center justify-end gap-6 h-full">
-                        <a href="/login" className="opacity-80">
-                            Log In
+                        <a href="/login" data-nav-reveal className="opacity-80">
+                            <ScrambleText trigger="parent">Log In</ScrambleText>
                         </a>
-                        <a href="/signup" className="btn-gradient gradient-border-inner rounded-2xl h-full gap-2.5 flex items-center justify-center px-4">
-                            <span>Get Started</span>
+                        <a href="/signup" data-nav-reveal className="group btn-gradient gradient-border-inner rounded-2xl h-full gap-2.5 flex items-center justify-center px-4">
+                            <ScrambleText trigger="parent">Get Started</ScrambleText>
                             <span className="rounded-full bg-background size-7 flex items-center justify-center">
-                                <Image src="plus.svg" alt="Plus" width={16} height={16} />
+                                <Image
+                                    src="plus.svg"
+                                    alt="Plus"
+                                    width={16}
+                                    height={16}
+                                    className="transition-transform duration-700 ease-out group-hover:rotate-720"
+                                />
                             </span>
                         </a>
                     </div>
@@ -163,6 +217,7 @@ export default function Navbar() {
                         onClick={() => setMenuOpen((open) => !open)}
                         aria-expanded={menuOpen}
                         aria-label={menuOpen ? "Close menu" : "Open menu"}
+                        data-nav-reveal
                         className="lg:hidden relative flex size-10 items-center justify-center rounded-lg bg-foreground"
                     >
                         <span
@@ -204,7 +259,7 @@ export default function Navbar() {
                                                 isActive ? "btn-gradient gradient-border-inner" : ""
                                             }`}
                                         >
-                                            {label}
+                                            <ScrambleText trigger="parent">{label}</ScrambleText>
                                         </a>
                                     );
                                 })}
@@ -215,14 +270,14 @@ export default function Navbar() {
                                     onClick={closeMenu}
                                     className="flex flex-1 items-center justify-center rounded-lg bg-foreground px-4 py-3"
                                 >
-                                    Log In
+                                    <ScrambleText trigger="parent">Log In</ScrambleText>
                                 </a>
                                 <a
                                     href="/signup"
                                     onClick={closeMenu}
                                     className="btn-gradient gradient-border-inner flex flex-1 items-center justify-center gap-2.5 rounded-lg px-4 py-3"
                                 >
-                                    <span>Get Started</span>
+                                    <ScrambleText trigger="parent">Get Started</ScrambleText>
                                 </a>
                             </div>
                         </div>
