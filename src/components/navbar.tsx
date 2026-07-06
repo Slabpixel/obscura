@@ -1,12 +1,9 @@
 "use client";
 
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ScrambleText from "@/components/scramble-text";
-
-gsap.registerPlugin(ScrollTrigger);
+import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 
 const NAV_LINKS = [
     { href: "#features", label: "features" },
@@ -24,21 +21,19 @@ export default function Navbar() {
     const linkRefs = useRef<Partial<Record<string, HTMLAnchorElement | null>>>({});
     const hasAnimated = useRef(false);
 
-    useLayoutEffect(() => {
-        const root = rootRef.current;
-        if (!root) return;
+    useGSAP(
+        () => {
+            const root = rootRef.current;
+            if (!root) return;
 
-        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (reducedMotion) return;
+            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            if (reducedMotion) return;
 
-        const items = root.querySelectorAll<HTMLElement>("[data-nav-reveal]");
-        const navWrapper = navRef.current;
+            const items = root.querySelectorAll<HTMLElement>("[data-nav-reveal]");
+            const navWrapper = navRef.current;
 
-        const ctx = gsap.context(() => {
             const tl = gsap.timeline({
                 defaults: { ease: "power3.out" },
-                // Reposition the active indicator once transforms settle so it
-                // doesn't get stuck at a mid-animation position.
                 onComplete: () => window.dispatchEvent(new Event("resize")),
             });
 
@@ -47,7 +42,7 @@ export default function Navbar() {
             if (navWrapper) {
                 tl.from(
                     navWrapper,
-                    { clipPath: "inset(0 0 100% 0)", duration: 0.7, clearProps: "clipPath" },
+                    { clipPath: "inset(0 100% 0 0)", duration: 0.7, clearProps: "clipPath" },
                     "-=0.2",
                 );
             }
@@ -65,59 +60,34 @@ export default function Navbar() {
                     "-=0.4",
                 );
             }
-        }, rootRef);
+        },
+        { scope: rootRef },
+    );
 
-        return () => ctx.revert();
-    }, []);
+    useGSAP(
+        () => {
+            const triggers = NAV_LINKS.flatMap(({ href }) => {
+                const id = href.slice(1);
+                const element = document.getElementById(id);
+                if (!element) return [];
 
-    useEffect(() => {
-        const triggers = NAV_LINKS.flatMap(({ href }) => {
-            const id = href.slice(1);
-            const element = document.getElementById(id);
-            if (!element) return [];
-
-            return ScrollTrigger.create({
-                trigger: element,
-                start: "top 45%",
-                end: "bottom 45%",
-                onToggle: ({ isActive }) => {
-                    if (isActive) setActiveSection(id);
-                },
+                return ScrollTrigger.create({
+                    trigger: element,
+                    start: "top 45%",
+                    end: "bottom 45%",
+                    onToggle: ({ isActive }) => {
+                        if (isActive) setActiveSection(id);
+                    },
+                });
             });
-        });
 
-        return () => triggers.forEach((trigger) => trigger.kill());
-    }, []);
+            return () => triggers.forEach((trigger) => trigger.kill());
+        },
+        { scope: rootRef },
+    );
 
-    useLayoutEffect(() => {
-        const nav = navRef.current;
-        const indicator = indicatorRef.current;
-        const activeLink = linkRefs.current[activeSection];
-
-        if (!nav || !indicator || !activeLink) return;
-        // Desktop links are hidden on mobile — skip while collapsed
-        if (activeLink.offsetParent === null) return;
-
-        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        const navRect = nav.getBoundingClientRect();
-        const linkRect = activeLink.getBoundingClientRect();
-
-        gsap.to(indicator, {
-            x: linkRect.left - navRect.left,
-            y: linkRect.top - navRect.top,
-            width: linkRect.width,
-            height: linkRect.height,
-            opacity: 1,
-            duration: hasAnimated.current && !reducedMotion ? 0.45 : 0,
-            ease: "power3.out",
-            overwrite: true,
-        });
-
-        hasAnimated.current = true;
-    }, [activeSection]);
-
-    useEffect(() => {
-        const onResize = () => {
+    useGSAP(
+        () => {
             const nav = navRef.current;
             const indicator = indicatorRef.current;
             const activeLink = linkRefs.current[activeSection];
@@ -125,25 +95,57 @@ export default function Navbar() {
             if (!nav || !indicator || !activeLink) return;
             if (activeLink.offsetParent === null) return;
 
+            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
             const navRect = nav.getBoundingClientRect();
             const linkRect = activeLink.getBoundingClientRect();
 
-            gsap.set(indicator, {
+            gsap.to(indicator, {
                 x: linkRect.left - navRect.left,
                 y: linkRect.top - navRect.top,
                 width: linkRect.width,
                 height: linkRect.height,
+                opacity: 1,
+                duration: hasAnimated.current && !reducedMotion ? 0.45 : 0,
+                ease: "power3.out",
+                overwrite: true,
             });
-        };
 
-        window.addEventListener("resize", onResize);
-        ScrollTrigger.addEventListener("refresh", onResize);
+            hasAnimated.current = true;
+        },
+        { scope: rootRef, dependencies: [activeSection] },
+    );
 
-        return () => {
-            window.removeEventListener("resize", onResize);
-            ScrollTrigger.removeEventListener("refresh", onResize);
-        };
-    }, [activeSection]);
+    useGSAP(
+        () => {
+            const onResize = () => {
+                const nav = navRef.current;
+                const indicator = indicatorRef.current;
+                const activeLink = linkRefs.current[activeSection];
+
+                if (!nav || !indicator || !activeLink) return;
+                if (activeLink.offsetParent === null) return;
+
+                const navRect = nav.getBoundingClientRect();
+                const linkRect = activeLink.getBoundingClientRect();
+
+                gsap.set(indicator, {
+                    x: linkRect.left - navRect.left,
+                    y: linkRect.top - navRect.top,
+                    width: linkRect.width,
+                    height: linkRect.height,
+                });
+            };
+
+            window.addEventListener("resize", onResize);
+            ScrollTrigger.addEventListener("refresh", onResize);
+
+            return () => {
+                window.removeEventListener("resize", onResize);
+                ScrollTrigger.removeEventListener("refresh", onResize);
+            };
+        },
+        { scope: rootRef, dependencies: [activeSection] },
+    );
 
     // Close the mobile menu once the viewport reaches the desktop layout
     useEffect(() => {

@@ -1,11 +1,7 @@
 "use client";
 
-import gsap from "gsap";
-import { ScrambleTextPlugin } from "gsap/ScrambleTextPlugin";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useEffect, useRef, type MouseEventHandler, type RefObject } from "react";
-
-gsap.registerPlugin(ScrambleTextPlugin, ScrollTrigger);
+import { useRef, type MouseEventHandler, type RefObject } from "react";
+import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 
 const ENTER_DURATION = 0.6;
 const LEAVE_DURATION = 0.35;
@@ -69,70 +65,77 @@ function useScrambleHover<T extends HTMLElement>(originalText: string, options: 
     const originalRef = useRef(originalText);
     originalRef.current = originalText;
 
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
+    useGSAP(
+        (_, contextSafe) => {
+            if (!contextSafe) return;
 
-        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (reducedMotion) return;
+            const el = ref.current;
+            if (!el) return;
 
-        const restore = () => {
-            el.textContent = originalRef.current;
-        };
+            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            if (reducedMotion) return;
 
-        const killTween = () => {
-            tweenRef.current?.kill();
-            tweenRef.current = null;
-        };
+            const restore = () => {
+                el.textContent = originalRef.current;
+            };
 
-        const scramble = (duration: number, config: object) => {
-            killTween();
-            tweenRef.current = gsap.to(el, {
-                duration,
-                overwrite: true,
-                scrambleText: { ...config, text: originalRef.current },
-                onComplete: restore,
-            });
-        };
+            const killTween = () => {
+                tweenRef.current?.kill();
+                tweenRef.current = null;
+            };
 
-        // Hover in/out
-        const hoverTarget = trigger === "parent" ? el.parentElement : el;
-        const onEnter = () => scramble(ENTER_DURATION, SCRAMBLE_IN);
-        const onLeave = () => scramble(LEAVE_DURATION, SCRAMBLE_OUT);
-
-        hoverTarget?.addEventListener("mouseenter", onEnter);
-        hoverTarget?.addEventListener("mouseleave", onLeave);
-
-        // Reveal (scramble in) on load or scroll
-        let revealTrigger: ScrollTrigger | null = null;
-        let delayedCall: gsap.core.Tween | null = null;
-
-        if (reveal !== "none") {
-            const runReveal = () => scramble(REVEAL_DURATION, SCRAMBLE_IN);
-
-            if (reveal === "load") {
-                delayedCall = gsap.delayedCall(revealDelay, runReveal);
-            } else {
-                revealTrigger = ScrollTrigger.create({
-                    trigger: el,
-                    start: revealStart,
-                    once: true,
-                    onEnter: () => {
-                        delayedCall = gsap.delayedCall(revealDelay, runReveal);
-                    },
+            const scramble = contextSafe((duration: number, config: object) => {
+                killTween();
+                tweenRef.current = gsap.to(el, {
+                    duration,
+                    overwrite: true,
+                    scrambleText: { ...config, text: originalRef.current },
+                    onComplete: restore,
                 });
-            }
-        }
+            });
 
-        return () => {
-            hoverTarget?.removeEventListener("mouseenter", onEnter);
-            hoverTarget?.removeEventListener("mouseleave", onLeave);
-            revealTrigger?.kill();
-            delayedCall?.kill();
-            killTween();
-            restore();
-        };
-    }, [originalText, trigger, reveal, revealDelay, revealStart]);
+            const hoverTarget = trigger === "parent" ? el.parentElement : el;
+            const onEnter = () => scramble(ENTER_DURATION, SCRAMBLE_IN);
+            const onLeave = () => scramble(LEAVE_DURATION, SCRAMBLE_OUT);
+
+            hoverTarget?.addEventListener("mouseenter", onEnter);
+            hoverTarget?.addEventListener("mouseleave", onLeave);
+
+            let revealTrigger: ScrollTrigger | null = null;
+            let delayedCall: gsap.core.Tween | null = null;
+
+            if (reveal !== "none") {
+                const runReveal = () => scramble(REVEAL_DURATION, SCRAMBLE_IN);
+
+                if (reveal === "load") {
+                    delayedCall = gsap.delayedCall(revealDelay, runReveal);
+                } else {
+                    revealTrigger = ScrollTrigger.create({
+                        trigger: el,
+                        start: revealStart,
+                        once: true,
+                        onEnter: () => {
+                            delayedCall = gsap.delayedCall(revealDelay, runReveal);
+                        },
+                    });
+                }
+            }
+
+            return () => {
+                hoverTarget?.removeEventListener("mouseenter", onEnter);
+                hoverTarget?.removeEventListener("mouseleave", onLeave);
+                revealTrigger?.kill();
+                delayedCall?.kill();
+                killTween();
+                restore();
+            };
+        },
+        {
+            scope: ref,
+            dependencies: [originalText, trigger, reveal, revealDelay, revealStart],
+            revertOnUpdate: true,
+        },
+    );
 
     return ref;
 }

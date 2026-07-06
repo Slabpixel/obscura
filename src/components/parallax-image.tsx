@@ -1,11 +1,8 @@
 "use client";
 
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image, { type ImageProps } from "next/image";
-import { useLayoutEffect, useRef } from "react";
-
-gsap.registerPlugin(ScrollTrigger);
+import { useRef } from "react";
+import { gsap, useGSAP } from "@/lib/gsap";
 
 type ParallaxImageProps = ImageProps & {
     /** Vertical travel in percent of the image height (applied both directions). */
@@ -17,19 +14,19 @@ type ParallaxImageProps = ImageProps & {
 export default function ParallaxImage({ strength = 12, scale, className, ...imageProps }: ParallaxImageProps) {
     const ref = useRef<HTMLImageElement>(null);
 
-    useLayoutEffect(() => {
-        const el = ref.current;
-        if (!el) return;
+    useGSAP(
+        () => {
+            const el = ref.current;
+            if (!el) return;
 
-        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (reducedMotion) return;
+            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            if (reducedMotion) return;
 
-        const trigger = el.parentElement;
-        if (!trigger) return;
+            const trigger = el.parentElement;
+            if (!trigger) return;
 
-        const coverScale = scale ?? 1 + (strength * 2) / 100;
+            const coverScale = scale ?? 1 + (strength * 2) / 100;
 
-        const ctx = gsap.context(() => {
             gsap.set(el, { scale: coverScale, transformOrigin: "center center" });
             gsap.fromTo(
                 el,
@@ -45,10 +42,9 @@ export default function ParallaxImage({ strength = 12, scale, className, ...imag
                     },
                 },
             );
-        });
-
-        return () => ctx.revert();
-    }, [strength, scale]);
+        },
+        { scope: ref, dependencies: [strength, scale], revertOnUpdate: true },
+    );
 
     return <Image ref={ref} className={className} {...imageProps} />;
 }

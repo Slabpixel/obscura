@@ -1,10 +1,7 @@
 "use client";
 
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { createElement, useLayoutEffect, useRef, type ElementType, type ReactNode } from "react";
-
-gsap.registerPlugin(ScrollTrigger);
+import { createElement, useRef, type ElementType, type ReactNode } from "react";
+import { gsap, useGSAP } from "@/lib/gsap";
 
 type RevealProps = {
     as?: ElementType;
@@ -34,37 +31,38 @@ export default function Reveal({
 }: RevealProps) {
     const ref = useRef<HTMLElement>(null);
 
-    useLayoutEffect(() => {
-        const el = ref.current;
-        if (!el) return;
+    useGSAP(
+        () => {
+            const el = ref.current;
+            if (!el) return;
 
-        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (reducedMotion) return;
+            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            if (reducedMotion) return;
 
-        const targets = stagger ? Array.from(el.children) : [el];
-        if (targets.length === 0) return;
+            const targets = stagger ? Array.from(el.children) : [el];
+            if (targets.length === 0) return;
 
-        gsap.set(targets, { autoAlpha: 0, y, filter: `blur(${blur}px)` });
+            gsap.set(targets, { autoAlpha: 0, y, filter: `blur(${blur}px)` });
 
-        const tween = gsap.to(targets, {
-            autoAlpha: 1,
-            y: 0,
-            filter: "blur(0px)",
-            duration,
-            ease: "power3.out",
-            stagger: stagger ?? 0,
-            delay,
-            ...(trigger === "scroll"
-                ? { scrollTrigger: { trigger: el, start, once: true } }
-                : {}),
-        });
-
-        return () => {
-            tween.scrollTrigger?.kill();
-            tween.kill();
-            gsap.set(targets, { clearProps: "all" });
-        };
-    }, [trigger, delay, stagger, y, blur, duration, start]);
+            gsap.to(targets, {
+                autoAlpha: 1,
+                y: 0,
+                filter: "blur(0px)",
+                duration,
+                ease: "power3.out",
+                stagger: stagger ?? 0,
+                delay,
+                ...(trigger === "scroll"
+                    ? { scrollTrigger: { trigger: el, start, once: true } }
+                    : {}),
+            });
+        },
+        {
+            scope: ref,
+            dependencies: [trigger, delay, stagger, y, blur, duration, start],
+            revertOnUpdate: true,
+        },
+    );
 
     return createElement(as, { ref, className }, children);
 }

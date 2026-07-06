@@ -1,15 +1,10 @@
 "use client";
 
-import gsap from "gsap";
-import { ScrambleTextPlugin } from "gsap/ScrambleTextPlugin";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { SplitText } from "gsap/SplitText";
 import Image from "next/image";
-import { useLayoutEffect, useRef } from "react";
+import { useRef } from "react";
 import { InsightsPillGrid } from "@/components/glass-pill";
 import ScrambleText from "@/components/scramble-text";
-
-gsap.registerPlugin(ScrollTrigger, SplitText, ScrambleTextPlugin);
+import { gsap, SplitText, useGSAP } from "@/lib/gsap";
 
 export default function Insights() {
     const sectionRef = useRef<HTMLElement>(null);
@@ -18,25 +13,25 @@ export default function Insights() {
     const monoRef = useRef<HTMLParagraphElement>(null);
     const imageRef = useRef<HTMLDivElement>(null);
 
-    useLayoutEffect(() => {
-        const section = sectionRef.current;
-        const card = cardRef.current;
-        const heading = headingRef.current;
-        const mono = monoRef.current;
-        const image = imageRef.current;
+    useGSAP(
+        () => {
+            const section = sectionRef.current;
+            const card = cardRef.current;
+            const heading = headingRef.current;
+            const mono = monoRef.current;
+            const image = imageRef.current;
 
-        if (!section || !card || !heading || !mono || !image) return;
+            if (!section || !card || !heading || !mono || !image) return;
 
-        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (reducedMotion) return;
+            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            if (reducedMotion) return;
 
-        const pills = Array.from(section.querySelectorAll<HTMLElement>("[data-pills] > *"));
-        const monoSpan = mono.querySelector<HTMLElement>("span");
-        const monoText = monoSpan?.textContent ?? "";
+            const pills = Array.from(section.querySelectorAll<HTMLElement>("[data-pills] > *"));
+            const monoSpan = mono.querySelector<HTMLElement>("span");
+            const monoText = monoSpan?.textContent ?? "";
 
-        const split = new SplitText(heading, { type: "chars" });
+            const split = new SplitText(heading, { type: "chars" });
 
-        const ctx = gsap.context(() => {
             gsap.set(split.chars, {
                 display: "inline-block",
                 autoAlpha: 0,
@@ -55,14 +50,12 @@ export default function Insights() {
                 },
             });
 
-            // 1. Reveal the container with a clip-path wipe
             tl.from(card, {
                 clipPath: "inset(0 0 100% 0)",
                 duration: 0.9,
                 ease: "power3.out",
             });
 
-            // 2. Text reveal (heading letters + mono scramble)
             tl.to(
                 split.chars,
                 {
@@ -87,26 +80,24 @@ export default function Insights() {
                 );
             }
 
-            // 3. Image reveal
             tl.to(
                 image,
                 { autoAlpha: 1, scale: 1, duration: 0.7, ease: "power3.out" },
                 "-=0.4",
             );
 
-            // 4. Pills stagger
             tl.to(
                 pills,
                 { autoAlpha: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 },
                 "-=0.3",
             );
-        }, section);
 
-        return () => {
-            ctx.revert();
-            split.revert();
-        };
-    }, []);
+            return () => {
+                split.revert();
+            };
+        },
+        { scope: sectionRef },
+    );
 
     return (
         <section ref={sectionRef} id="insights" className="relative overflow-hidden py-12 md:py-16 lg:py-20">

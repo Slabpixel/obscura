@@ -1,13 +1,10 @@
 "use client";
 
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
-import { useLayoutEffect, useRef } from "react";
+import { useRef } from "react";
 import RevealText from "@/components/reveal-text";
 import ScrambleText from "@/components/scramble-text";
-
-gsap.registerPlugin(ScrollTrigger);
+import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 
 const CARDS = [
     { image: "/impact/card-1.png", label: "Mood layers" },
@@ -70,28 +67,53 @@ export default function Impact() {
     const cardVisualRefs = useRef<(HTMLDivElement | null)[]>([]);
     const labelRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-    useLayoutEffect(() => {
-        const section = sectionRef.current;
-        const pin = pinRef.current;
-        const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
-        const labels = labelRefs.current.filter(Boolean) as HTMLDivElement[];
+    useGSAP(
+        (_, contextSafe) => {
+            if (!contextSafe) return;
 
-        if (!section || !pin || cards.length === 0) return;
+            const section = sectionRef.current;
+            const pin = pinRef.current;
+            const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
+            const visuals = cardVisualRefs.current.filter(Boolean) as HTMLDivElement[];
+            const labels = labelRefs.current.filter(Boolean) as HTMLDivElement[];
 
-        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        let hoverCleanups: (() => void)[] = [];
+            if (!section || !pin || cards.length === 0) return;
 
-        const ctx = gsap.context(() => {
+            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
             if (reducedMotion) {
                 cards.forEach((card, index) => {
                     gsap.set(card, { left: leftSlot(index) });
                 });
                 gsap.set(labels, { opacity: 1 });
+                gsap.set(visuals, { autoAlpha: 1, clearProps: "transform,filter" });
                 return;
             }
 
+            gsap.set(visuals, {
+                autoAlpha: 0,
+                y: 48,
+                scale: 0.92,
+                filter: "blur(10px)",
+                transformOrigin: "center bottom",
+            });
+
+            gsap.to(visuals, {
+                autoAlpha: 1,
+                y: 0,
+                scale: 1,
+                filter: "blur(0px)",
+                duration: 0.8,
+                ease: "power3.out",
+                stagger: 0.1,
+                scrollTrigger: {
+                    trigger: pin,
+                    start: "top 80%",
+                    once: true,
+                },
+            });
+
             const pinLength = () => window.innerHeight * CARDS.length;
-            /** Scroll before pin locks — animation begins as the section enters view. */
             const leadIn = () => window.innerHeight * 0.85;
 
             ScrollTrigger.create({
@@ -141,10 +163,12 @@ export default function Impact() {
                 });
             }
 
+            const hoverCleanups: (() => void)[] = [];
+
             if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-                hoverCleanups = cards.map((card, index) => {
+                cards.forEach((card, index) => {
                     const visualEl = cardVisualRefs.current[index];
-                    if (!visualEl) return () => {};
+                    if (!visualEl) return;
 
                     gsap.set(card, { transformPerspective: 900 });
 
@@ -160,7 +184,7 @@ export default function Impact() {
                         ? gsap.quickTo(image, "y", { duration: 0.65, ease: "power3.out" })
                         : null;
 
-                    const onMove = (event: MouseEvent) => {
+                    const onMove = contextSafe((event: MouseEvent) => {
                         const rect = card.getBoundingClientRect();
                         const relX = (event.clientX - rect.left) / rect.width - 0.5;
                         const relY = (event.clientY - rect.top) / rect.height - 0.5;
@@ -170,36 +194,36 @@ export default function Impact() {
 
                         imgXTo?.(relX * rect.width * 0.01);
                         imgYTo?.(relY * rect.height * 0.01);
-                    };
+                    });
 
-                    const onLeave = () => {
+                    const onLeave = contextSafe(() => {
                         xTo(0);
                         yTo(0);
                         imgXTo?.(0);
                         imgYTo?.(0);
-                    };
+                    });
 
                     card.addEventListener("mousemove", onMove);
                     card.addEventListener("mouseleave", onLeave);
 
-                    return () => {
+                    hoverCleanups.push(() => {
                         card.removeEventListener("mousemove", onMove);
                         card.removeEventListener("mouseleave", onLeave);
-                    };
+                    });
                 });
             }
-        }, section);
 
-        const refresh = () => ScrollTrigger.refresh();
-        requestAnimationFrame(refresh);
-        window.addEventListener("load", refresh);
+            const refresh = () => ScrollTrigger.refresh();
+            requestAnimationFrame(refresh);
+            window.addEventListener("load", refresh);
 
-        return () => {
-            window.removeEventListener("load", refresh);
-            hoverCleanups.forEach((cleanup) => cleanup());
-            ctx.revert();
-        };
-    }, []);
+            return () => {
+                window.removeEventListener("load", refresh);
+                hoverCleanups.forEach((cleanup) => cleanup());
+            };
+        },
+        { scope: sectionRef },
+    );
 
     return (
         <section id="how-it-works" ref={sectionRef} className="relative">

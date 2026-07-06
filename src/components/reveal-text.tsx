@@ -1,11 +1,7 @@
 "use client";
 
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { SplitText } from "gsap/SplitText";
-import { createElement, useLayoutEffect, useRef, type ElementType } from "react";
-
-gsap.registerPlugin(ScrollTrigger, SplitText);
+import { createElement, useRef, type ElementType } from "react";
+import { gsap, SplitText, useGSAP } from "@/lib/gsap";
 
 type RevealTextProps = {
     as?: ElementType;
@@ -30,18 +26,16 @@ export default function RevealText({
 }: RevealTextProps) {
     const ref = useRef<HTMLElement>(null);
 
-    useLayoutEffect(() => {
-        const el = ref.current;
-        if (!el) return;
+    useGSAP(
+        () => {
+            const el = ref.current;
+            if (!el) return;
 
-        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (reducedMotion) return;
+            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            if (reducedMotion) return;
 
-        let split: SplitText | undefined;
+            let split: SplitText | undefined;
 
-        const ctx = gsap.context(() => {
-            // autoSplit re-splits on font load / width change; returning the tween
-            // from onSplit lets SplitText clean up and resume progress on re-split.
             split = SplitText.create(el, {
                 type: "words, chars",
                 autoSplit: true,
@@ -63,13 +57,17 @@ export default function RevealText({
                     });
                 },
             });
-        }, ref);
 
-        return () => {
-            ctx.revert();
-            split?.revert();
-        };
-    }, [children, trigger, delay, stagger, duration, start]);
+            return () => {
+                split?.revert();
+            };
+        },
+        {
+            scope: ref,
+            dependencies: [children, trigger, delay, stagger, duration, start],
+            revertOnUpdate: true,
+        },
+    );
 
     return createElement(as, { ref, className }, children);
 }
