@@ -30,7 +30,10 @@ export default function Insights() {
             const monoSpan = mono.querySelector<HTMLElement>("span");
             const monoText = monoSpan?.textContent ?? "";
 
-            const split = new SplitText(heading, { type: "chars" });
+            const split = SplitText.create(heading, {
+                type: "words, chars",
+                aria: "auto",
+            });
 
             gsap.set(split.chars, {
                 display: "inline-block",
@@ -105,7 +108,7 @@ export default function Insights() {
                 <div ref={cardRef} className="lg:h-150 rounded-2xl overflow-hidden bg-foreground text-background grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
                     <div className="flex flex-col justify-between gap-10 p-6 sm:p-10 lg:p-16 lg:pr-0">
                         <div className="flex flex-col gap-6 lg:gap-10">
-                            <h2 ref={headingRef} className="text-4xl sm:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] tracking-[-0.02em]">
+                            <h2 ref={headingRef} className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] tracking-[-0.02em]">
                                 Achieve mental clarity with wellness tools.
                             </h2>
                             <InsightsPillGrid />
